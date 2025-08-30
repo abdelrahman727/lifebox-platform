@@ -14,7 +14,7 @@ COPY libs/database/package*.json ./libs/database/
 COPY libs/shared/package*.json ./libs/shared/
 
 # Install dependencies (cache this layer) - skip scripts to avoid husky issues
-RUN NODE_ENV=production npm install --ignore-scripts && npm cache clean --force
+RUN npm install --ignore-scripts && npm cache clean --force
 
 # Install dev dependencies in separate stage for better caching
 FROM base AS dev-deps
