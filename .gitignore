@@ -165,8 +165,9 @@ certificates/
 # Application-specific uploads and generated files
 uploads/
 **/uploads/
-reports/
-**/reports/
+/reports/
+apps/*/reports/
+!apps/*/src/modules/reports/
 backups/
 **/backups/
 temp/
