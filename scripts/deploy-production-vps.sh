@@ -157,7 +157,7 @@ setup_project() {
     # Clone project if not exists
     if [ ! -d ".git" ]; then
         log_info "Cloning project repository..."
-        git clone https://github.com/abdelrahman727/lifebox-platform-complete.git .
+        git clone https://github.com/abdelrahman727/lifebox-platform.git .
     else
         log_info "Updating existing repository..."
         git fetch origin

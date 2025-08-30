@@ -25,7 +25,7 @@ ssh root@72.60.34.28
 apt update && apt install -y git
 
 # Clone the production-ready repository
-git clone https://github.com/abdelrahman727/lifebox-platform-complete.git lifebox-platform
+git clone https://github.com/abdelrahman727/lifebox-platform.git lifebox-platform
 cd lifebox-platform
 ```
 
