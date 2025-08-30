@@ -25,7 +25,7 @@ ssh root@72.60.34.28
 apt update && apt install -y git
 
 # Clone the production-ready repository
-git clone https://github.com/abdelrahman727/lifebox-platform.git
+git clone https://github.com/abdelrahman727/lifebox-platform-complete.git lifebox-platform
 cd lifebox-platform
 ```
 
@@ -158,7 +158,7 @@ sudo systemctl status lifebox-platform
 ### **Manual Docker Commands**
 
 ```bash
-cd /opt/lifebox-platform
+cd ~/lifebox-platform
 
 # Start services manually
 docker compose -f infrastructure/docker/docker-compose.production.yml up -d
@@ -324,10 +324,10 @@ mosquitto_pub -h 72.60.34.28 -p 1883 -t "test/topic" -m "test message"
 
 ```bash
 # Run backup script (created automatically)
-/opt/lifebox-platform/scripts/maintenance/backup.sh
+~/lifebox-platform/scripts/maintenance/backup.sh
 
 # Update platform (created automatically)
-/opt/lifebox-platform/scripts/maintenance/update.sh
+~/lifebox-platform/scripts/maintenance/update.sh
 ```
 
 ### **Log Files**

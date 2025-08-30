@@ -41,7 +41,7 @@
 ```bash
 # 1. Clone and install dependencies
 git clone <repository>
-cd lifebox-platform-v2
+cd lifebox-platform
 npm install
 
 # 2. Start infrastructure services

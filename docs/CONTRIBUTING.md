@@ -28,8 +28,8 @@ Welcome to the LifeBox IoT Platform! This guide will help you understand how to 
 
 ```bash
 # 1. Fork and clone the repository
-git clone https://github.com/your-username/lifebox-platform-v2.git
-cd lifebox-platform-v2
+git clone https://github.com/your-username/lifebox-platform-complete.git lifebox-platform
+cd lifebox-platform
 
 # 2. Install dependencies
 npm run install:all

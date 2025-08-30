@@ -42,8 +42,8 @@ log_error() {
 
 # Configuration
 PROJECT_NAME="lifebox-platform"
-PROJECT_DIR="/opt/$PROJECT_NAME"
-BACKUP_DIR="/opt/backups/$PROJECT_NAME"
+PROJECT_DIR="~/$PROJECT_NAME"
+BACKUP_DIR="~/backups/$PROJECT_NAME"
 NGINX_CONFIG_DIR="/etc/nginx/sites-available"
 DOCKER_COMPOSE_FILE="infrastructure/docker/docker-compose.production.yml"
 ENV_FILE=".env"
@@ -157,7 +157,7 @@ setup_project() {
     # Clone project if not exists
     if [ ! -d ".git" ]; then
         log_info "Cloning project repository..."
-        git clone https://github.com/abdelrahman727/lifebox-platform.git .
+        git clone https://github.com/abdelrahman727/lifebox-platform-complete.git .
     else
         log_info "Updating existing repository..."
         git fetch origin
@@ -439,7 +439,7 @@ create_maintenance_scripts() {
     # Backup script
     cat > "$PROJECT_DIR/scripts/maintenance/backup.sh" << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/opt/backups/lifebox-platform"
+BACKUP_DIR="~/backups/lifebox-platform"
 DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p "$BACKUP_DIR/$DATE"
 
@@ -456,7 +456,7 @@ EOF
     # Update script
     cat > "$PROJECT_DIR/scripts/maintenance/update.sh" << 'EOF'
 #!/bin/bash
-cd /opt/lifebox-platform
+cd ~/lifebox-platform
 git pull origin main
 docker compose -f infrastructure/docker/docker-compose.production.yml up -d --build
 echo "Update completed"
