@@ -3,8 +3,8 @@ FROM node:20-alpine AS base
 # Install dependencies only when needed
 RUN apk add --no-cache libc6-compat
 
-# Dependencies stage
-FROM base AS deps
+# Builder stage - install all dependencies and build
+FROM base AS builder
 WORKDIR /app
 
 # Copy package files for better caching
@@ -13,22 +13,8 @@ COPY apps/api/package*.json ./apps/api/
 COPY libs/database/package*.json ./libs/database/
 COPY libs/shared/package*.json ./libs/shared/
 
-# Install dependencies (cache this layer) - skip scripts to avoid husky issues
+# Install all dependencies (including dev dependencies for build)
 RUN npm install --ignore-scripts && npm cache clean --force
-
-# Install dev dependencies in separate stage for better caching
-FROM base AS dev-deps
-WORKDIR /app
-COPY package*.json ./
-COPY apps/api/package*.json ./apps/api/
-COPY libs/database/package*.json ./libs/database/
-COPY libs/shared/package*.json ./libs/shared/
-RUN npm install --ignore-scripts && npm cache clean --force
-
-# Builder stage
-FROM base AS builder
-WORKDIR /app
-COPY --from=dev-deps /app/node_modules ./node_modules
 
 # Copy source code
 COPY . .
@@ -43,31 +29,6 @@ RUN cd libs/database && npx prisma generate
 # Build the application
 RUN cd apps/api && npm run build
 
-# Skip pruning for now to keep all dependencies available
-
-# Development stage
-FROM base AS development
-WORKDIR /app
-COPY --from=dev-deps /app/node_modules ./node_modules
-COPY . .
-
-# Generate Prisma client for development
-RUN cd libs/database && npm run generate
-
-# Create app user for development
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S lifebox -u 1001
-
-# Create directories
-RUN mkdir -p uploads reports && chown -R lifebox:nodejs uploads reports
-USER lifebox
-
-# Expose port and debug port
-EXPOSE 3000 9229
-
-# Development command with debugging
-CMD ["npm", "run", "start:debug"]
-
 # Production stage
 FROM node:20-alpine AS production
 
@@ -81,8 +42,15 @@ RUN adduser -S lifebox -u 1001
 # Set working directory
 WORKDIR /app
 
-# Copy full node_modules from builder stage (includes all dependencies)
-COPY --from=builder --chown=lifebox:nodejs /app/node_modules ./node_modules
+# Copy production dependencies only
+COPY package*.json ./
+COPY apps/api/package*.json ./apps/api/
+COPY libs/database/package*.json ./libs/database/
+COPY libs/shared/package*.json ./libs/shared/
+
+# Install only production dependencies
+RUN NODE_ENV=production npm install --omit=dev --ignore-scripts && npm cache clean --force
+
 # Copy built application
 COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist ./dist
 COPY --from=builder --chown=lifebox:nodejs /app/apps/api/package*.json ./
@@ -106,4 +74,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/apps/api/src/main.js"]
+CMD ["node", "dist/main.js"]
