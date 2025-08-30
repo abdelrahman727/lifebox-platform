@@ -49,9 +49,8 @@ docs/
 logs
 *.log
 
-# Uploads and temporary files
+# Uploads and temporary files (but not source code modules)
 uploads/
-reports/
 tmp/
 temp/
 
