@@ -1,0 +1,131 @@
+# Full-stack development environment with all services containerized
+# Usage: docker-compose -f docker-compose.dev-full.yml up
+version: '3.8'
+
+services:
+  # Infrastructure services (PostgreSQL + EMQX)
+  postgres:
+    image: timescale/timescaledb-ha:pg15-latest
+    container_name: lifebox-dev-postgres
+    environment:
+      POSTGRES_DB: lifebox_dev
+      POSTGRES_USER: lifebox
+      POSTGRES_PASSWORD: lifebox123
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - lifebox-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifebox -d lifebox_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  emqx:
+    image: emqx/emqx:5.3.2
+    container_name: lifebox-dev-emqx
+    environment:
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: public
+      EMQX_LOG__CONSOLE_HANDLER__LEVEL: debug
+    ports:
+      - "1883:1883"    # MQTT
+      - "8083:8083"    # MQTT over WebSocket
+      - "18083:18083"  # Dashboard
+    volumes:
+      - emqx_dev_data:/opt/emqx/data
+      - emqx_dev_log:/opt/emqx/log
+    networks:
+      - lifebox-dev
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx_ctl", "status"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  # LifeBox API (containerized for full-stack development)
+  lifebox-api-dev:
+    build:
+      context: ../../
+      dockerfile: apps/api/Dockerfile
+      target: development  # Use development target
+    container_name: lifebox-dev-api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: "postgresql://lifebox:lifebox123@postgres:5432/lifebox_dev?schema=public"
+      MQTT_BROKER_HOST: emqx
+      MQTT_BROKER_PORT: 1883
+      MQTT_USERNAME: lifebox_dev
+      MQTT_PASSWORD: lifebox_dev_pass
+      JWT_SECRET: dev_jwt_secret_key_here
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+    volumes:
+      - ../../apps/api/src:/app/src:ro  # Live reload
+      - ../../libs:/app/libs:ro
+      - api_uploads:/app/uploads
+    networks:
+      - lifebox-dev
+    depends_on:
+      - postgres
+      - emqx
+    command: ["npm", "run", "start:debug"]
+
+  # MQTT Ingestion Service (containerized)
+  lifebox-mqtt-dev:
+    build:
+      context: ../../
+      dockerfile: apps/mqtt-ingestion/Dockerfile
+      target: development
+    container_name: lifebox-dev-mqtt
+    environment:
+      NODE_ENV: development
+      MQTT_BROKER_HOST: emqx
+      MQTT_BROKER_PORT: 1883
+      API_BASE_URL: http://lifebox-api-dev:3000/api/v1
+      LOG_LEVEL: debug
+    volumes:
+      - ../../apps/mqtt-ingestion/src:/app/src:ro
+    networks:
+      - lifebox-dev
+    depends_on:
+      - emqx
+      - lifebox-api-dev
+
+  # Next.js Web Application (containerized)
+  lifebox-web-dev:
+    build:
+      context: ../../
+      dockerfile: apps/web/Dockerfile
+      target: development
+    container_name: lifebox-dev-web
+    environment:
+      NODE_ENV: development
+      API_BASE_URL: http://lifebox-api-dev:3000/api/v1
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3000/api/v1
+    ports:
+      - "3001:3000"
+    volumes:
+      - ../../apps/web/src:/app/src:ro
+      - ../../apps/web/public:/app/public:ro
+    networks:
+      - lifebox-dev
+    depends_on:
+      - lifebox-api-dev
+
+networks:
+  lifebox-dev:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  emqx_dev_data:
+    driver: local
+  emqx_dev_log:
+    driver: local
+  api_uploads:
+    driver: local

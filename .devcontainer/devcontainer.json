@@ -1,0 +1,102 @@
+{
+  "name": "LifeBox IoT Platform",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "lifebox-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "lifebox",
+      "userUid": 1000,
+      "userGid": 1000
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "20",
+      "nvmVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": false
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    }
+  },
+  
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "typescript.preferences.root": "/workspace",
+        "eslint.workingDirectories": ["/workspace"],
+        "prettier.configPath": "/workspace/.prettierrc"
+      },
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "prisma.prisma",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.vscode-jest",
+        "usernamehw.errorlens",
+        "gruntfuggly.todo-tree",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  },
+  
+  "forwardPorts": [
+    3000,  // API
+    3001,  // Web App
+    5432,  // PostgreSQL
+    1883,  // MQTT
+    8083,  // MQTT WebSocket
+    18083, // EMQX Dashboard
+    5555   // Prisma Studio
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "LifeBox API",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "LifeBox Web App", 
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "PostgreSQL Database",
+      "onAutoForward": "ignore"
+    },
+    "1883": {
+      "label": "MQTT Broker",
+      "onAutoForward": "ignore"
+    },
+    "18083": {
+      "label": "EMQX Dashboard",
+      "onAutoForward": "notify"
+    },
+    "5555": {
+      "label": "Prisma Studio",
+      "onAutoForward": "notify"
+    }
+  },
+  
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "postStartCommand": ".devcontainer/post-start.sh",
+  
+  "remoteUser": "lifebox",
+  
+  "mounts": [
+    "source=${localWorkspaceFolder}/.env.example,target=/workspace/.env,type=bind,consistency=cached",
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+  ]
+}

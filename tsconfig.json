@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@lifebox/database": ["libs/database"],
+      "@lifebox/database/*": ["libs/database/*"],
+      "@lifebox/shared": ["libs/shared/src"],
+      "@lifebox/shared/*": ["libs/shared/src/*"]
+    }
+  },
+  "include": [],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/mqtt-ingestion" },
+    { "path": "./apps/web" },
+    { "path": "./libs/database" },
+    { "path": "./libs/shared" }
+  ]
+}

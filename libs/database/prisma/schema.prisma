@@ -1,0 +1,1185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  description         String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  permissions         RolePermission[]
+  templatePermissions TemplatePermission[] @relation("TemplatePermissionRole")
+  users               User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                         String                      @id @default(uuid())
+  email                      String                      @unique
+  passwordHash               String                      @map("password_hash")
+  fullName                   String?                     @map("full_name")
+  phone                      String?
+  roleId                     String                      @map("role_id")
+  clientId                   String?                     @map("client_id")
+  isActive                   Boolean                     @default(true) @map("is_active")
+  lastLoginAt                DateTime?                   @map("last_login_at")
+  createdAt                  DateTime                    @default(now()) @map("created_at")
+  updatedAt                  DateTime                    @updatedAt @map("updated_at")
+  alarmAcks                  AlarmEvent[]                @relation("AcknowledgedBy")
+  alarmRules                 AlarmRule[]
+  auditLogs                  AuditLog[]
+  calculationFormulas        CalculationFormula[]
+  dashboardAssignments       ClientDashboardAssignment[]
+  commandTemplates           CommandTemplate[]
+  commands                   ControlCommand[]
+  customerPricing            CustomerPricing[]           @relation("PricingCreatedBy")
+  dashboards                 DashboardLayout[]
+  dashboardTemplates         DashboardTemplate[]
+  deviceAlarmResolves        DeviceAlarm[]               @relation("DeviceAlarmResolver")
+  metadataHistory            DeviceMetadataHistory[]
+  devices                    Device[]                    @relation("DeviceCreatedBy")
+  exchangeRates              ExchangeRate[]
+  uploadedFiles              File[]                      @relation("FileUploadedBy")
+  templatesCreated           MessageTemplate[]           @relation("TemplateCreatedBy")
+  templatesUpdated           MessageTemplate[]           @relation("TemplateUpdatedBy")
+  passwordResetTokens        PasswordResetToken[]
+  postpaidPeriods            PostpaidPeriod[]            @relation("PeriodCreatedBy")
+  quickViewShares            QuickViewPageShare[]        @relation("QuickViewSharedBy")
+  sharedQuickViews           QuickViewPageShare[]        @relation("QuickViewSharedWith")
+  quickViewPages             QuickViewPage[]             @relation("QuickViewCreatedBy")
+  refreshTokens              RefreshToken[]
+  reportTemplates            ReportTemplate[]
+  scheduledReports           ScheduledReport[]
+  systemSettings             SystemSetting[]
+  grantedTemplatePermissions TemplatePermission[]        @relation("TemplatePermissionGrantor")
+  templatePermissions        TemplatePermission[]        @relation("TemplatePermissionUser")
+  unknownFields              UnknownFieldCatalog[]
+  grantedCommands            UserCommandPermission[]     @relation("CommandGrantedBy")
+  commandPermissions         UserCommandPermission[]     @relation("UserCommandPermissions")
+  assignedDevices            UserDeviceAssignment[]      @relation("DeviceAssignedBy")
+  deviceAssignments          UserDeviceAssignment[]      @relation("UserDeviceAssignments")
+  client                     Client?                     @relation(fields: [clientId], references: [id])
+  role                       Role                        @relation(fields: [roleId], references: [id])
+  widgets                    Widget[]
+
+  @@index([clientId])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model UserDeviceAssignment {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  deviceId       String   @map("device_id")
+  assignedBy     String   @map("assigned_by")
+  assignedAt     DateTime @default(now()) @map("assigned_at")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  assignedByUser User     @relation("DeviceAssignedBy", fields: [assignedBy], references: [id])
+  device         Device   @relation("DeviceUserAssignments", fields: [deviceId], references: [id], onDelete: Cascade)
+  user           User     @relation("UserDeviceAssignments", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([deviceId])
+  @@index([assignedBy])
+  @@map("user_device_assignments")
+}
+
+model CommandPermission {
+  id              String                  @id @default(uuid())
+  commandType     String                  @unique @map("command_type")
+  name            String
+  description     String?
+  category        String                  @default("general")
+  isSystemLevel   Boolean                 @default(false) @map("is_system_level")
+  isClientLevel   Boolean                 @default(true) @map("is_client_level")
+  isActive        Boolean                 @default(true) @map("is_active")
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @updatedAt @map("updated_at")
+  userPermissions UserCommandPermission[]
+
+  @@index([commandType])
+  @@index([category])
+  @@map("command_permissions")
+}
+
+model UserCommandPermission {
+  id                  String            @id @default(uuid())
+  userId              String            @map("user_id")
+  commandPermissionId String            @map("command_permission_id")
+  grantedBy           String            @map("granted_by")
+  grantedAt           DateTime          @default(now()) @map("granted_at")
+  isActive            Boolean           @default(true) @map("is_active")
+  canDelegate         Boolean           @default(false) @map("can_delegate")
+  scope               String            @default("global")
+  scopeId             String?           @map("scope_id")
+  expiresAt           DateTime?         @map("expires_at")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  commandPermission   CommandPermission @relation(fields: [commandPermissionId], references: [id], onDelete: Cascade)
+  grantedByUser       User              @relation("CommandGrantedBy", fields: [grantedBy], references: [id])
+  user                User              @relation("UserCommandPermissions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commandPermissionId, scope, scopeId])
+  @@index([userId])
+  @@index([commandPermissionId])
+  @@index([grantedBy])
+  @@index([scope, scopeId])
+  @@map("user_command_permissions")
+}
+
+model RolePermission {
+  id        String   @id @default(uuid())
+  roleId    String   @map("role_id")
+  resource  String
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, resource, action])
+  @@map("role_permissions")
+}
+
+model Client {
+  id                        String                      @id @default(uuid())
+  name                      String
+  organizationName          String?                     @map("organization_name")
+  subscriptionType          String?                     @map("subscription_type")
+  clientTier                String?                     @map("client_tier")
+  paymentStatus             String?                     @map("payment_status")
+  paymentMethod             String?                     @map("payment_method")
+  electricityRateEgp        Decimal                     @default(2.15) @map("electricity_rate_egp") @db.Decimal(10, 2)
+  replacingSource           String?                     @map("replacing_source")
+  credit                    Decimal                     @default(0.00) @db.Decimal(10, 2)
+  fawryPaymentId            String?                     @unique @map("fawry_payment_id")
+  billingType               String                      @default("prepaid") @map("billing_type")
+  createdAt                 DateTime                    @default(now()) @map("created_at")
+  updatedAt                 DateTime                    @updatedAt @map("updated_at")
+  phoneNumber1              String?                     @map("phone_number_1")
+  phoneNumber2              String?                     @map("phone_number_2")
+  phoneNumber3              String?                     @map("phone_number_3")
+  auditLogs                 AuditLog[]
+  dashboardAssignments      ClientDashboardAssignment[]
+  creditTransactions        CreditTransaction[]
+  customerPricing           CustomerPricing[]
+  devices                   Device[]
+  fawryBillInquiries        FawryBillInquiry[]
+  fawryPaymentNotifications FawryPaymentNotification[]
+  files                     File[]
+  notifications             Notification[]
+  payments                  Payment[]
+  postpaidPeriods           PostpaidPeriod[]
+  subscriptions             Subscription[]
+  usageTracking             UsageTracking[]
+  users                     User[]
+
+  @@map("clients")
+}
+
+model Subscription {
+  id         String    @id @default(uuid())
+  clientId   String    @map("client_id")
+  planName   String    @map("plan_name")
+  startDate  DateTime  @map("start_date")
+  endDate    DateTime? @map("end_date")
+  monthlyFee Decimal?  @map("monthly_fee") @db.Decimal(10, 2)
+  status     String
+  autoRenew  Boolean   @default(true) @map("auto_renew")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  payments   Payment[]
+  client     Client    @relation(fields: [clientId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model CustomerPricing {
+  id          String   @id @default(uuid())
+  clientId    String   @map("client_id")
+  pricingType String   @map("pricing_type")
+  rateValue   Decimal  @map("rate_value") @db.Decimal(10, 2)
+  perUnit     Decimal  @map("per_unit") @db.Decimal(10, 2)
+  unitType    String   @map("unit_type")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String   @map("created_by")
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator     User     @relation("PricingCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([clientId])
+  @@map("customer_pricing")
+}
+
+model PostpaidPeriod {
+  id            String          @id @default(uuid())
+  clientId      String          @map("client_id")
+  startDate     DateTime        @map("start_date")
+  endDate       DateTime        @map("end_date")
+  isActive      Boolean         @default(true) @map("is_active")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  createdBy     String          @map("created_by")
+  client        Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator       User            @relation("PeriodCreatedBy", fields: [createdBy], references: [id])
+  usageTracking UsageTracking[]
+
+  @@index([clientId])
+  @@map("postpaid_periods")
+}
+
+model UsageTracking {
+  id                String          @id @default(uuid())
+  deviceId          String          @map("device_id")
+  clientId          String          @map("client_id")
+  sessionStart      DateTime        @map("session_start")
+  sessionEnd        DateTime?       @map("session_end")
+  energyConsumedKwh Float?          @default(0) @map("energy_consumed_kwh")
+  waterPumpedM3     Float?          @default(0) @map("water_pumped_m3")
+  costEgp           Decimal?        @default(0) @map("cost_egp") @db.Decimal(10, 2)
+  paymentType       String          @map("payment_type")
+  postpaidPeriodId  String?         @map("postpaid_period_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  client            Client          @relation(fields: [clientId], references: [id])
+  device            Device          @relation(fields: [deviceId], references: [id])
+  postpaidPeriod    PostpaidPeriod? @relation(fields: [postpaidPeriodId], references: [id])
+
+  @@index([deviceId])
+  @@index([clientId])
+  @@map("usage_tracking")
+}
+
+model CreditTransaction {
+  id                        String                     @id @default(uuid())
+  clientId                  String                     @map("client_id")
+  transactionType           String                     @map("transaction_type")
+  amount                    Decimal                    @map("amount") @db.Decimal(10, 2)
+  balanceBefore             Decimal                    @map("balance_before") @db.Decimal(10, 2)
+  balanceAfter              Decimal                    @map("balance_after") @db.Decimal(10, 2)
+  referenceId               String?                    @map("reference_id")
+  description               String?
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  client                    Client                     @relation(fields: [clientId], references: [id])
+  fawryPaymentNotifications FawryPaymentNotification[]
+
+  @@index([clientId])
+  @@map("credit_transactions")
+}
+
+model FawryBillInquiry {
+  id                        String   @id @default(uuid())
+  requestId                 String   @map("request_id")
+  asyncRequestId            String   @map("async_request_id")
+  billingAccount            String   @map("billing_account")
+  billTypeCode              String   @map("bill_type_code")
+  terminalId                String?  @map("terminal_id")
+  deliveryMethod            String?  @map("delivery_method")
+  requestTimestamp          DateTime @map("request_timestamp")
+  requestPayload            Json     @map("request_payload")
+  responseStatusCode        Int      @map("response_status_code")
+  responseStatusDescription String?  @map("response_status_description")
+  responsePayload           Json     @map("response_payload")
+  responseTimestamp         DateTime @map("response_timestamp")
+  billAmount                Decimal? @map("bill_amount") @db.Decimal(10, 2)
+  clientId                  String?  @map("client_id")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  client                    Client?  @relation(fields: [clientId], references: [id])
+
+  @@index([requestId])
+  @@index([billingAccount])
+  @@index([clientId])
+  @@index([createdAt(sort: Desc)])
+  @@map("fawry_bill_inquiries")
+}
+
+model FawryPaymentNotification {
+  id                        String              @id @default(uuid())
+  requestId                 String              @map("request_id")
+  asyncRequestId            String              @map("async_request_id")
+  fptn                      String              @unique
+  bnkptn                    String?
+  bnkdtn                    String?
+  fcrn                      String?
+  billingAccount            String              @map("billing_account")
+  billTypeCode              String              @map("bill_type_code")
+  terminalId                String?             @map("terminal_id")
+  clientTerminalSeqId       String?             @map("client_terminal_seq_id")
+  paymentMethod             String              @map("payment_method")
+  paymentType               String              @map("payment_type")
+  deliveryMethod            String              @map("delivery_method")
+  amount                    Decimal             @db.Decimal(10, 2)
+  currency                  String              @default("EGP")
+  isRetry                   Boolean             @default(false) @map("is_retry")
+  paymentStatus             String              @map("payment_status")
+  requestTimestamp          DateTime            @map("request_timestamp")
+  requestPayload            Json                @map("request_payload")
+  responseStatusCode        Int                 @map("response_status_code")
+  responseStatusDescription String?             @map("response_status_description")
+  responsePayload           Json                @map("response_payload")
+  responseTimestamp         DateTime            @map("response_timestamp")
+  clientId                  String?             @map("client_id")
+  creditTransactionId       String?             @map("credit_transaction_id")
+  createdAt                 DateTime            @default(now()) @map("created_at")
+  customerData              FawryCustomerData[]
+  client                    Client?             @relation(fields: [clientId], references: [id])
+  creditTransaction         CreditTransaction?  @relation(fields: [creditTransactionId], references: [id])
+
+  @@index([requestId])
+  @@index([fptn])
+  @@index([billingAccount])
+  @@index([clientId])
+  @@index([createdAt(sort: Desc)])
+  @@map("fawry_payment_notifications")
+}
+
+model FawryCustomerData {
+  id                    String                   @id @default(uuid())
+  paymentNotificationId String                   @map("payment_notification_id")
+  officialId            String?                  @map("official_id")
+  officialIdType        String?                  @map("official_id_type")
+  name                  String?
+  middleName            String?                  @map("middle_name")
+  lastName              String?                  @map("last_name")
+  birthDate             DateTime?                @map("birth_date") @db.Date
+  gender                String?
+  mobile                String?
+  email                 String?
+  createdAt             DateTime                 @default(now()) @map("created_at")
+  paymentNotification   FawryPaymentNotification @relation(fields: [paymentNotificationId], references: [id], onDelete: Cascade)
+
+  @@index([paymentNotificationId])
+  @@map("fawry_customer_data")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  title     String
+  message   String
+  severity  String
+  clientId  String   @map("client_id")
+  metadata  Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model Device {
+  id                    String                         @id @default(uuid())
+  clientId              String                         @map("client_id")
+  deviceName            String                         @map("device_name")
+  deviceCode            String                         @unique @map("device_code")
+  seitechDeviceId       String?                        @unique @map("seitech_device_id")
+  lifeboxCode           String                         @unique @map("lifebox_code")
+  deviceType            String                         @default("solar_pump") @map("device_type")
+  installationDate      DateTime?                      @map("installation_date")
+  commissioningDate     DateTime?                      @map("commissioning_date")
+  warrantyEndDate       DateTime?                      @map("warranty_end_date")
+  contractReference     String?                        @map("contract_reference")
+  components            Json                           @default("{}")
+  pumpDetails           Json?                          @map("pump_details")
+  isActive              Boolean                        @default(true) @map("is_active")
+  createdAt             DateTime                       @default(now()) @map("created_at")
+  updatedAt             DateTime                       @updatedAt @map("updated_at")
+  createdBy             String?                        @map("created_by")
+  alarmEvents           AlarmEvent[]
+  alarmRules            AlarmRule[]
+  auditLogs             AuditLog[]
+  calculationResults    CalculationResult[]
+  commands              ControlCommand[]
+  deviceAlarms          DeviceAlarm[]
+  locations             DeviceLocation[]
+  metadataHistory       DeviceMetadataHistory[]
+  metadataSnapshots     DeviceMetadataSnapshot[]
+  client                Client                         @relation(fields: [clientId], references: [id])
+  creator               User?                          @relation("DeviceCreatedBy", fields: [createdBy], references: [id])
+  files                 File[]
+  calculationVariables  QuickViewCalculationVariable[] @relation("CalculationVariables")
+  quickViewDevices      QuickViewDevice[]              @relation("QuickViewDevices")
+  filterConditions      QuickViewFilterCondition[]     @relation("FilterConditions")
+  sustainabilityMetrics SustainabilityMetric[]
+  telemetryEvents       TelemetryEvent[]
+  usageTracking         UsageTracking[]
+  userAssignments       UserDeviceAssignment[]         @relation("DeviceUserAssignments")
+
+  @@index([clientId])
+  @@index([isActive])
+  @@map("devices")
+}
+
+model DeviceLocation {
+  id          String    @id @default(uuid())
+  deviceId    String    @map("device_id")
+  latitude    Decimal?  @db.Decimal(10, 8)
+  longitude   Decimal?  @db.Decimal(11, 8)
+  address     String?
+  governorate String?
+  city        String?
+  validFrom   DateTime  @default(now()) @map("valid_from")
+  validTo     DateTime? @map("valid_to")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  device      Device    @relation(fields: [deviceId], references: [id])
+
+  @@map("device_locations")
+}
+
+model DeviceMetadataHistory {
+  id        String   @id @default(uuid())
+  deviceId  String   @map("device_id")
+  fieldName String   @map("field_name")
+  oldValue  String?  @map("old_value")
+  newValue  String?  @map("new_value")
+  changedBy String?  @map("changed_by")
+  changedAt DateTime @default(now()) @map("changed_at")
+  user      User?    @relation(fields: [changedBy], references: [id])
+  device    Device   @relation(fields: [deviceId], references: [id])
+
+  @@map("device_metadata_history")
+}
+
+model DeviceMetadataSnapshot {
+  id                String    @id @default(uuid())
+  deviceId          String    @map("device_id")
+  version           Int       @default(1)
+  configurationHash String    @map("configuration_hash")
+  metadataSnapshot  Json      @map("metadata_snapshot")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  validFrom         DateTime  @default(now()) @map("valid_from")
+  validUntil        DateTime? @map("valid_until")
+  device            Device    @relation(fields: [deviceId], references: [id])
+
+  @@unique([deviceId, version])
+  @@index([deviceId])
+  @@index([deviceId, validFrom])
+  @@index([configurationHash])
+  @@map("device_metadata_snapshots")
+}
+
+model DeviceAlarm {
+  id         String    @id @default(uuid())
+  deviceId   String    @map("device_id")
+  type       String
+  title      String
+  status     Int
+  severity   Int
+  propagate  Boolean   @default(true)
+  rawData    Json      @map("raw_data")
+  receivedAt DateTime  @default(now()) @map("received_at")
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime? @map("resolved_at")
+  resolvedBy String?   @map("resolved_by")
+  notes      String?
+  device     Device    @relation(fields: [deviceId], references: [id])
+  resolver   User?     @relation("DeviceAlarmResolver", fields: [resolvedBy], references: [id])
+
+  @@index([deviceId, receivedAt(sort: Desc)])
+  @@index([deviceId, resolved])
+  @@index([type, severity])
+  @@index([receivedAt(sort: Desc)])
+  @@map("device_alarms")
+}
+
+model TelemetryEvent {
+  id                                  String   @id @default(uuid())
+  time                                DateTime @db.Timestamptz(6)
+  deviceId                            String   @map("device_id")
+  extras                              Json?
+  rawPayload                          Json?    @map("raw_payload")
+  ingestionSource                     String   @default("mqtt") @map("ingestion_source")
+  createdAt                           DateTime @default(now()) @map("created_at")
+  accumulatedNonsolarConsumptionValue Float?   @map("accumulated_nonsolar_consumption_value")
+  accumulatedSolarConsumptionValue    Float?   @map("accumulated_solar_consumption_value")
+  busVoltageValue                     Float?   @map("bus_voltage_value")
+  clientTierValue                     String?  @map("client_tier_value")
+  commissioningDateValue              String?  @map("commissioning_date_value")
+  configurationHash                   String?  @map("configuration_hash")
+  contractRefNumberValue              String?  @map("contract_ref_number_value")
+  dailyNonsolarConsumptionValue       Float?   @map("daily_nonsolar_consumption_value")
+  dailySolarConsumptionValue          Float?   @map("daily_solar_consumption_value")
+  deviceCodeValue                     String?  @map("device_code_value")
+  deviceIdValue                       String?  @map("device_id_value")
+  deviceMetadataSnapshot              Json?    @map("device_metadata_snapshot")
+  energyPerDayValue                   Float?   @map("energy_per_day_value")
+  frequencyValue                      Float?   @map("frequency_value")
+  hourlyNonsolarConsumptionValue      Float?   @map("hourly_nonsolar_consumption_value")
+  hourlySolarConsumptionValue         Float?   @map("hourly_solar_consumption_value")
+  hwVersionValue                      String?  @map("hw_version_value")
+  installationDateValue               String?  @map("installation_date_value")
+  inverterDirectionValue              String?  @map("inverter_direction_value")
+  inverterStatusValue                 String?  @map("inverter_status_value")
+  inverterSupplySourceValue           String?  @map("inverter_supply_source_value")
+  inverterTemperatureValue            Float?   @map("inverter_temperature_value")
+  lastInvUpdateValue                  String?  @map("last_inv_update_value")
+  levelSensorValue                    Float?   @map("level_sensor_value")
+  lifeboxCodeValue                    String?  @map("lifebox_code_value")
+  locationValue                       String?  @map("location_value")
+  metadataVersion                     Int?     @map("metadata_version")
+  moneySavedValue                     Float?   @map("money_saved_value")
+  motorSpeedValue                     Float?   @map("motor_speed_value")
+  powerSourceOfBoxValue               String?  @map("power_source_of_box_value")
+  pressureSensorValue                 Float?   @map("pressure_sensor_value")
+  pumpCurrentValue                    Float?   @map("pump_current_value")
+  pumpEnergyConsumptionValue          Float?   @map("pump_energy_consumption_value")
+  pumpPowerValue                      Float?   @map("pump_power_value")
+  pumpStatusValue                     String?  @map("pump_status_value")
+  pumpVoltageValue                    Float?   @map("pump_voltage_value")
+  replacingWhatValue                  String?  @map("replacing_what_value")
+  startCommandModeValue               String?  @map("start_command_mode_value")
+  subscriptionTypeValue               String?  @map("subscription_type_value")
+  swVersionValue                      String?  @map("sw_version_value")
+  systemComponentsValue               String?  @map("system_components_value")
+  tdsValue                            Float?   @map("tds_value")
+  totalCO2MitigatedValue              Float?   @map("total_co2_mitigated_value")
+  totalEnergyValue                    Float?   @map("total_energy_value")
+  totalWaterVolumeM3Value             Float?   @map("total_water_volume_m3_value")
+  waterPumpedFlowRatePerHourValue     Float?   @map("water_pumped_flow_rate_per_hour_value")
+  device                              Device   @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, time(sort: Desc)])
+  @@index([deviceId, pumpStatusValue])
+  @@index([deviceId, inverterSupplySourceValue])
+  @@index([deviceId, powerSourceOfBoxValue])
+  @@index([time(sort: Desc)])
+  @@map("telemetry_events")
+}
+
+model UnknownFieldCatalog {
+  id                  String    @id @default(uuid())
+  fieldName           String    @unique @map("field_name")
+  firstSeen           DateTime  @default(now()) @map("first_seen")
+  lastSeen            DateTime  @default(now()) @map("last_seen")
+  occurrenceCount     Int       @default(1) @map("occurrence_count")
+  sampleValues        Json?     @map("sample_values")
+  promoted            Boolean   @default(false)
+  promotedAt          DateTime? @map("promoted_at")
+  promotedBy          String?   @map("promoted_by")
+  affectedDevices     String[]  @map("affected_devices")
+  configurationHashes String[]  @map("configuration_hashes")
+  deviceContexts      Json?     @map("device_contexts")
+  user                User?     @relation(fields: [promotedBy], references: [id])
+
+  @@map("unknown_field_catalog")
+}
+
+model ControlCommand {
+  id              String                  @id @default(uuid())
+  deviceId        String                  @map("device_id")
+  commandType     String                  @map("command_type")
+  payload         Json?
+  status          String
+  requestedBy     String                  @map("requested_by")
+  requestedAt     DateTime                @default(now()) @map("requested_at")
+  sentAt          DateTime?               @map("sent_at")
+  acknowledgedAt  DateTime?               @map("acknowledged_at")
+  completedAt     DateTime?               @map("completed_at")
+  errorMessage    String?                 @map("error_message")
+  retryCount      Int                     @default(0) @map("retry_count")
+  maxRetries      Int                     @default(3) @map("max_retries")
+  acknowledgments CommandAcknowledgment[]
+  device          Device                  @relation(fields: [deviceId], references: [id])
+  user            User                    @relation(fields: [requestedBy], references: [id])
+
+  @@index([deviceId, status])
+  @@map("control_commands")
+}
+
+model CommandAcknowledgment {
+  id         String         @id @default(uuid())
+  commandId  String         @map("command_id")
+  ackType    String?        @map("ack_type")
+  status     String
+  message    String?
+  receivedAt DateTime       @default(now()) @map("received_at")
+  command    ControlCommand @relation(fields: [commandId], references: [id])
+
+  @@map("command_acknowledgments")
+}
+
+model CommandTemplate {
+  id                String             @id @default(uuid())
+  name              String             @unique
+  displayName       String             @map("display_name")
+  description       String?
+  commandTemplate   String             @map("command_template")
+  category          String             @default("general")
+  variables         Json               @default("{}") @map("variables")
+  isDefault         Boolean            @default(false) @map("is_default")
+  isActive          Boolean            @default(true) @map("is_active")
+  requiredRole      String?            @map("required_role")
+  createdBy         String?            @map("created_by")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  user              User?              @relation(fields: [createdBy], references: [id])
+  quickViewCommands QuickViewCommand[] @relation("QuickViewCommands")
+
+  @@index([category, isActive])
+  @@index([isDefault, isActive])
+  @@map("command_templates")
+}
+
+model AlarmRule {
+  id                       String          @id @default(uuid())
+  name                     String
+  deviceId                 String?         @map("device_id")
+  alarmCategory            String          @map("alarm_category")
+  metricName               String          @map("metric_name")
+  condition                String
+  thresholdValue           Float?          @map("threshold_value")
+  thresholdDurationSeconds Int             @default(0) @map("threshold_duration_seconds")
+  preAlarmThreshold        Float?          @map("pre_alarm_threshold")
+  severity                 String?
+  enabled                  Boolean         @default(true)
+  createdBy                String          @map("created_by")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+  customDashboardMessage   String?         @map("custom_dashboard_message")
+  customEmailMessage       String?         @map("custom_email_message")
+  customSmsMessage         String?         @map("custom_sms_message")
+  alarmEvents              AlarmEvent[]
+  reactions                AlarmReaction[]
+  user                     User            @relation(fields: [createdBy], references: [id])
+  device                   Device?         @relation(fields: [deviceId], references: [id])
+
+  @@map("alarm_rules")
+}
+
+model AlarmReaction {
+  id             String    @id @default(uuid())
+  alarmRuleId    String    @map("alarm_rule_id")
+  reactionType   String    @map("reaction_type")
+  reactionConfig Json?     @map("reaction_config")
+  enabled        Boolean   @default(true)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  alarmRule      AlarmRule @relation(fields: [alarmRuleId], references: [id], onDelete: Cascade)
+
+  @@map("alarm_reactions")
+}
+
+model AlarmEvent {
+  id                String    @id @default(uuid())
+  alarmRuleId       String    @map("alarm_rule_id")
+  deviceId          String    @map("device_id")
+  severity          String
+  triggeredAt       DateTime  @default(now()) @map("triggered_at")
+  resolvedAt        DateTime? @map("resolved_at")
+  triggeredValue    Float?    @map("triggered_value")
+  message           String?
+  acknowledged      Boolean   @default(false)
+  acknowledgedBy    String?   @map("acknowledged_by")
+  acknowledgedAt    DateTime? @map("acknowledged_at")
+  notificationsSent Json?     @map("notifications_sent")
+  user              User?     @relation("AcknowledgedBy", fields: [acknowledgedBy], references: [id])
+  alarmRule         AlarmRule @relation(fields: [alarmRuleId], references: [id])
+  device            Device    @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, triggeredAt(sort: Desc)])
+  @@index([deviceId, resolvedAt])
+  @@map("alarm_events")
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  clientId             String        @map("client_id")
+  subscriptionId       String?       @map("subscription_id")
+  fawryReferenceNumber String?       @unique @map("fawry_reference_number")
+  fawryTransactionId   String?       @unique @map("fawry_transaction_id")
+  amountEgp            Decimal       @map("amount_egp") @db.Decimal(10, 2)
+  amountUsd            Decimal?      @map("amount_usd") @db.Decimal(10, 2)
+  exchangeRate         Decimal?      @map("exchange_rate") @db.Decimal(10, 4)
+  paymentMethod        String        @map("payment_method")
+  paymentDate          DateTime      @map("payment_date")
+  status               String
+  billingPeriodStart   DateTime?     @map("billing_period_start")
+  billingPeriodEnd     DateTime?     @map("billing_period_end")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  client               Client        @relation(fields: [clientId], references: [id])
+  subscription         Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@map("payments")
+}
+
+model SustainabilityMetric {
+  id                 String    @id @default(uuid())
+  deviceId           String    @map("device_id")
+  date               DateTime  @db.Date
+  totalEnergyMwh     Float?    @map("total_energy_mwh")
+  co2MitigatedTons   Float?    @map("co2_mitigated_tons")
+  moneySavedEgp      Decimal?  @map("money_saved_egp") @db.Decimal(12, 2)
+  moneySavedUsd      Decimal?  @map("money_saved_usd") @db.Decimal(12, 2)
+  calculationMethod  String?   @map("calculation_method")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  calculationDetails Json?     @map("calculation_details")
+  exchangeRateDate   DateTime? @map("exchange_rate_date")
+  exchangeRateUsed   Decimal?  @map("exchange_rate_used") @db.Decimal(10, 6)
+  device             Device    @relation(fields: [deviceId], references: [id])
+
+  @@unique([deviceId, date])
+  @@map("sustainability_metrics")
+}
+
+model ExchangeRate {
+  id             String    @id @default(uuid())
+  baseCurrency   String    @default("EGP") @map("base_currency")
+  targetCurrency String    @default("USD") @map("target_currency")
+  rate           Decimal   @db.Decimal(10, 6)
+  effectiveFrom  DateTime  @map("effective_from")
+  effectiveTo    DateTime? @map("effective_to")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdBy      String    @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  notes          String?
+  user           User      @relation(fields: [createdBy], references: [id])
+
+  @@unique([baseCurrency, targetCurrency, effectiveFrom])
+  @@map("exchange_rates")
+}
+
+model CalculationFormula {
+  id                 String              @id @default(uuid())
+  name               String              @unique
+  description        String
+  formula            String
+  variables          Json
+  constants          Json
+  resultUnit         String              @map("result_unit")
+  category           String
+  isActive           Boolean             @default(true) @map("is_active")
+  createdBy          String              @map("created_by")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  user               User                @relation(fields: [createdBy], references: [id])
+  calculationResults CalculationResult[]
+
+  @@map("calculation_formulas")
+}
+
+model CalculationResult {
+  id           String             @id @default(uuid())
+  deviceId     String             @map("device_id")
+  formulaId    String             @map("formula_id")
+  timestamp    DateTime           @db.Timestamptz(6)
+  result       Decimal            @db.Decimal(15, 6)
+  inputValues  Json
+  isValid      Boolean            @default(true) @map("is_valid")
+  errorMessage String?            @map("error_message")
+  calculatedAt DateTime           @default(now()) @map("calculated_at")
+  device       Device             @relation(fields: [deviceId], references: [id])
+  formula      CalculationFormula @relation(fields: [formulaId], references: [id])
+
+  @@unique([deviceId, formulaId, timestamp])
+  @@index([timestamp, deviceId])
+  @@index([formulaId, timestamp])
+  @@map("calculation_results")
+}
+
+model Widget {
+  id                       String                    @id @default(uuid())
+  name                     String
+  widgetType               String                    @map("widget_type")
+  config                   Json
+  createdBy                String                    @map("created_by")
+  isPublic                 Boolean                   @default(false) @map("is_public")
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  dashboardTemplateWidgets DashboardTemplateWidget[]
+  dashboardWidgets         DashboardWidget[]
+  user                     User                      @relation(fields: [createdBy], references: [id])
+
+  @@map("widgets")
+}
+
+model DashboardLayout {
+  id               String            @id @default(uuid())
+  name             String
+  userId           String            @map("user_id")
+  layoutConfig     Json              @map("layout_config")
+  isDefault        Boolean           @default(false) @map("is_default")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  user             User              @relation(fields: [userId], references: [id])
+  dashboardWidgets DashboardWidget[]
+
+  @@map("dashboard_layouts")
+}
+
+model DashboardWidget {
+  id              String          @id @default(uuid())
+  dashboardId     String          @map("dashboard_id")
+  widgetId        String          @map("widget_id")
+  position        Json
+  configOverrides Json?           @map("config_overrides")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  dashboard       DashboardLayout @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  widget          Widget          @relation(fields: [widgetId], references: [id])
+
+  @@map("dashboard_widgets")
+}
+
+model DashboardTemplate {
+  id                  String                      @id @default(uuid())
+  name                String
+  description         String?
+  targetRole          String                      @map("target_role")
+  layoutConfig        Json                        @map("layout_config")
+  isSystemDefault     Boolean                     @default(false) @map("is_system_default")
+  isPublic            Boolean                     @default(false) @map("is_public")
+  createdBy           String                      @map("created_by")
+  createdAt           DateTime                    @default(now()) @map("created_at")
+  updatedAt           DateTime                    @updatedAt @map("updated_at")
+  clientAssignments   ClientDashboardAssignment[]
+  templateWidgets     DashboardTemplateWidget[]
+  creator             User                        @relation(fields: [createdBy], references: [id])
+  templatePermissions TemplatePermission[]
+
+  @@index([targetRole])
+  @@index([isSystemDefault])
+  @@map("dashboard_templates")
+}
+
+model DashboardTemplateWidget {
+  id              String            @id @default(uuid())
+  templateId      String            @map("template_id")
+  widgetId        String            @map("widget_id")
+  position        Json
+  configOverrides Json?             @map("config_overrides")
+  isRequired      Boolean           @default(false) @map("is_required")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  template        DashboardTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  widget          Widget            @relation(fields: [widgetId], references: [id])
+
+  @@map("dashboard_template_widgets")
+}
+
+model ClientDashboardAssignment {
+  id          String            @id @default(uuid())
+  templateId  String            @map("template_id")
+  clientId    String            @map("client_id")
+  assignedBy  String            @map("assigned_by")
+  isActive    Boolean           @default(true) @map("is_active")
+  permissions Json              @default("{}")
+  assignedAt  DateTime          @default(now()) @map("assigned_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  assignor    User              @relation(fields: [assignedBy], references: [id])
+  client      Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  template    DashboardTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, clientId])
+  @@index([clientId])
+  @@map("client_dashboard_assignments")
+}
+
+model TemplatePermission {
+  id           String            @id @default(uuid())
+  templateId   String            @map("template_id")
+  userId       String?           @map("user_id")
+  roleId       String?           @map("role_id")
+  canEdit      Boolean           @default(false) @map("can_edit")
+  canCopy      Boolean           @default(true) @map("can_copy")
+  requiresCopy Boolean           @default(false) @map("requires_copy")
+  grantedBy    String            @map("granted_by")
+  isActive     Boolean           @default(true) @map("is_active")
+  expiresAt    DateTime?         @map("expires_at")
+  grantedAt    DateTime          @default(now()) @map("granted_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  grantor      User              @relation("TemplatePermissionGrantor", fields: [grantedBy], references: [id])
+  role         Role?             @relation("TemplatePermissionRole", fields: [roleId], references: [id])
+  template     DashboardTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user         User?             @relation("TemplatePermissionUser", fields: [userId], references: [id])
+
+  @@unique([templateId, userId])
+  @@unique([templateId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("template_permissions")
+}
+
+model ReportTemplate {
+  id               String            @id @default(uuid())
+  name             String
+  reportType       String?           @map("report_type")
+  parameters       Json?
+  templateConfig   Json?             @map("template_config")
+  createdBy        String            @map("created_by")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  user             User              @relation(fields: [createdBy], references: [id])
+  scheduledReports ScheduledReport[]
+
+  @@map("report_templates")
+}
+
+model ScheduledReport {
+  id             String         @id @default(uuid())
+  templateId     String         @map("template_id")
+  scheduleType   String         @map("schedule_type")
+  scheduleConfig Json?          @map("schedule_config")
+  recipients     Json?
+  enabled        Boolean        @default(true)
+  lastRunAt      DateTime?      @map("last_run_at")
+  nextRunAt      DateTime?      @map("next_run_at")
+  createdBy      String         @map("created_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  user           User           @relation(fields: [createdBy], references: [id])
+  template       ReportTemplate @relation(fields: [templateId], references: [id])
+
+  @@map("scheduled_reports")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?  @map("user_id")
+  actionType   String   @map("action_type")
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  details      Json?
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+  category     String   @default("user_action") @map("category")
+  changes      Json?
+  clientId     String?  @map("client_id")
+  deviceId     String?  @map("device_id")
+  duration     Int?
+  endpoint     String?
+  errorMessage String?  @map("error_message")
+  isSuccessful Boolean  @default(true) @map("is_successful")
+  metadata     Json?
+  method       String?
+  sessionId    String?  @map("session_id")
+  severity     String   @default("info")
+  statusCode   Int?     @map("status_code")
+  client       Client?  @relation(fields: [clientId], references: [id])
+  device       Device?  @relation(fields: [deviceId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([deviceId, createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@index([actionType, createdAt(sort: Desc)])
+  @@index([resourceType, createdAt(sort: Desc)])
+  @@index([category, severity])
+  @@index([isSuccessful, createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  dataType    String
+  category    String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by")
+  user        User?    @relation(fields: [updatedBy], references: [id])
+
+  @@map("system_settings")
+}
+
+model MessageTemplate {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      String
+  category  String
+  subject   String?
+  content   String
+  variables Json
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String   @map("created_by")
+  updatedBy String?  @map("updated_by")
+  creator   User     @relation("TemplateCreatedBy", fields: [createdBy], references: [id])
+  updater   User?    @relation("TemplateUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("message_templates")
+}
+
+model File {
+  id           String   @id @default(uuid())
+  originalName String   @map("original_name")
+  filename     String   @unique
+  mimetype     String
+  filesize     Int
+  category     String
+  tags         String[]
+  description  String?
+  visibility   String   @default("private")
+  uploadedBy   String   @map("uploaded_by")
+  clientId     String?  @map("client_id")
+  deviceId     String?  @map("device_id")
+  path         String
+  url          String?
+  checksum     String?
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  client       Client?  @relation(fields: [clientId], references: [id])
+  device       Device?  @relation(fields: [deviceId], references: [id])
+  uploader     User     @relation("FileUploadedBy", fields: [uploadedBy], references: [id])
+
+  @@index([category, clientId])
+  @@index([uploadedBy])
+  @@index([deviceId])
+  @@map("files")
+}
+
+model QuickViewPage {
+  id           String                 @id @default(uuid())
+  name         String
+  description  String?
+  slug         String                 @unique
+  isActive     Boolean                @default(true) @map("is_active")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+  createdBy    String                 @map("created_by")
+  calculations QuickViewCalculation[]
+  commands     QuickViewCommand[]
+  devices      QuickViewDevice[]
+  filters      QuickViewFilter[]
+  shares       QuickViewPageShare[]
+  creator      User                   @relation("QuickViewCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("quick_view_pages")
+}
+
+model QuickViewDevice {
+  id              String        @id @default(uuid())
+  quickViewPageId String        @map("quick_view_page_id")
+  deviceId        String        @map("device_id")
+  displayOrder    Int           @default(0) @map("display_order")
+  device          Device        @relation("QuickViewDevices", fields: [deviceId], references: [id], onDelete: Cascade)
+  quickViewPage   QuickViewPage @relation(fields: [quickViewPageId], references: [id], onDelete: Cascade)
+
+  @@unique([quickViewPageId, deviceId])
+  @@map("quick_view_devices")
+}
+
+model QuickViewCommand {
+  id                String          @id @default(uuid())
+  quickViewPageId   String          @map("quick_view_page_id")
+  commandTemplateId String          @map("command_template_id")
+  displayOrder      Int             @default(0) @map("display_order")
+  customLabel       String?         @map("custom_label")
+  commandTemplate   CommandTemplate @relation("QuickViewCommands", fields: [commandTemplateId], references: [id], onDelete: Cascade)
+  quickViewPage     QuickViewPage   @relation(fields: [quickViewPageId], references: [id], onDelete: Cascade)
+
+  @@unique([quickViewPageId, commandTemplateId])
+  @@map("quick_view_commands")
+}
+
+model QuickViewPageShare {
+  id              String        @id @default(uuid())
+  quickViewPageId String        @map("quick_view_page_id")
+  userId          String        @map("user_id")
+  canUseCommands  Boolean       @default(false) @map("can_use_commands")
+  isActive        Boolean       @default(true) @map("is_active")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  sharedBy        String        @map("shared_by")
+  quickViewPage   QuickViewPage @relation(fields: [quickViewPageId], references: [id], onDelete: Cascade)
+  sharedByUser    User          @relation("QuickViewSharedBy", fields: [sharedBy], references: [id])
+  user            User          @relation("QuickViewSharedWith", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([quickViewPageId, userId])
+  @@map("quick_view_page_shares")
+}
+
+model QuickViewCalculation {
+  id              String                         @id @default(uuid())
+  quickViewPageId String                         @map("quick_view_page_id")
+  name            String
+  description     String?
+  formula         String
+  displayOrder    Int                            @default(0) @map("display_order")
+  isActive        Boolean                        @default(true) @map("is_active")
+  resultUnit      String?                        @map("result_unit")
+  displayFormat   String                         @default("number") @map("display_format")
+  decimalPlaces   Int                            @default(2) @map("decimal_places")
+  createdAt       DateTime                       @default(now()) @map("created_at")
+  updatedAt       DateTime                       @updatedAt @map("updated_at")
+  variables       QuickViewCalculationVariable[]
+  quickViewPage   QuickViewPage                  @relation(fields: [quickViewPageId], references: [id], onDelete: Cascade)
+
+  @@map("quick_view_calculations")
+}
+
+model QuickViewCalculationVariable {
+  id            String               @id @default(uuid())
+  calculationId String               @map("calculation_id")
+  variableName  String               @map("variable_name")
+  deviceId      String               @map("device_id")
+  fieldName     String               @map("field_name")
+  aggregation   String               @default("latest")
+  timeWindow    Int?                 @map("time_window")
+  calculation   QuickViewCalculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+  device        Device               @relation("CalculationVariables", fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([calculationId, variableName])
+  @@map("quick_view_calculation_variables")
+}
+
+model QuickViewFilter {
+  id              String                     @id @default(uuid())
+  quickViewPageId String                     @map("quick_view_page_id")
+  name            String
+  description     String?
+  isActive        Boolean                    @default(true) @map("is_active")
+  isDefault       Boolean                    @default(false) @map("is_default")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+  conditions      QuickViewFilterCondition[]
+  quickViewPage   QuickViewPage              @relation(fields: [quickViewPageId], references: [id], onDelete: Cascade)
+
+  @@map("quick_view_filters")
+}
+
+model QuickViewFilterCondition {
+  id        String          @id @default(uuid())
+  filterId  String          @map("filter_id")
+  deviceId  String?         @map("device_id")
+  fieldName String          @map("field_name")
+  operator  String
+  value     String
+  logicalOp String          @default("AND") @map("logical_op")
+  device    Device?         @relation("FilterConditions", fields: [deviceId], references: [id], onDelete: Cascade)
+  filter    QuickViewFilter @relation(fields: [filterId], references: [id], onDelete: Cascade)
+
+  @@map("quick_view_filter_conditions")
+}

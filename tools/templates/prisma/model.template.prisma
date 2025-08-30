@@ -1,0 +1,47 @@
+// {{NAME_PASCAL}} Model
+// Generated on {{DATE}}
+
+model {{NAME_PASCAL}} {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  
+  // Multi-tenant support
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Audit fields
+  createdById String?
+  createdBy   User?    @relation("{{NAME_PASCAL}}CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?    @relation("{{NAME_PASCAL}}UpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Add your specific fields here
+  // Example fields (uncomment and modify as needed):
+  // email       String?   @unique
+  // phone       String?
+  // address     String?
+  // metadata    Json?     @db.Json
+  // status      String    @default("ACTIVE")
+  // priority    Int       @default(1)
+  // startDate   DateTime?
+  // endDate     DateTime?
+  
+  // Add relationships here
+  // Example relationships (uncomment and modify as needed):
+  // devices     Device[]
+  // assignments UserAssignment[]
+  // logs        ActivityLog[]
+  
+  @@map("{{NAME_KEBAB}}")
+  @@index([clientId])
+  @@index([isActive])
+  @@index([createdAt])
+  // Add more indexes as needed for query performance
+  // @@index([status])
+  // @@index([priority])
+}

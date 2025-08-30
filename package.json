@@ -1,0 +1,81 @@
+{
+  "name": "lifebox-platform",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@10.0.0",
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:api": "turbo dev --filter=@lifebox/api",
+    "dev:mqtt": "turbo dev --filter=@lifebox/mqtt-ingestion",
+    "dev:web": "turbo dev --filter=@lifebox/web",
+    "dev:services": "turbo dev:services",
+    "build": "turbo build",
+    "build:production": "turbo build:production",
+    "build:validate": "turbo build:validate",
+    "build:shared": "turbo build --filter=@lifebox/shared",
+    "build:api": "turbo build --filter=@lifebox/api",
+    "build:mqtt": "turbo build --filter=@lifebox/mqtt-ingestion", 
+    "build:web": "turbo build --filter=@lifebox/web",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:ci": "turbo test:ci",
+    "test:e2e": "turbo test:e2e",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "db:generate": "turbo db:generate",
+    "db:migrate": "turbo db:migrate",
+    "db:seed": "turbo db:seed",
+    "db:studio": "npm run studio --workspace=@lifebox/database",
+    "install:all": "npm install",
+    "clean": "turbo clean",
+    "clean:cache": "turbo clean:cache",
+    "clean:all": "rm -rf node_modules libs/*/node_modules apps/*/node_modules .turbo",
+    "format": "turbo format",
+    "format:check": "turbo format:check",
+    "start": "turbo start",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{md,json,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@nestjs/testing": "^10.0.0",
+    "@types/express-rate-limit": "^5.1.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.9",
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "concurrently": "^8.2.2",
+    "eslint-plugin-prettier": "^5.5.3",
+    "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "jest": "^30.0.5",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.1.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.0",
+    "turbo": "^2.5.6",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@nestjs/config": "^3.2.3",
+    "@nestjs/swagger": "^7.4.0",
+    "@types/bcrypt": "^6.0.0",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "express-rate-limit": "^8.0.1",
+    "swagger-ui-express": "^5.0.1"
+  }
+}

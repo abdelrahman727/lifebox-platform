@@ -1,0 +1,392 @@
+{
+  "folders": [
+    {
+      "name": "🏠 Root",
+      "path": "."
+    },
+    {
+      "name": "🔌 API",
+      "path": "./apps/api"
+    },
+    {
+      "name": "📡 MQTT Ingestion",
+      "path": "./apps/mqtt-ingestion"
+    },
+    {
+      "name": "📱 Web App",
+      "path": "./apps/web"
+    },
+    {
+      "name": "💾 Database",
+      "path": "./libs/database"
+    },
+    {
+      "name": "🔧 Shared",
+      "path": "./libs/shared"
+    },
+    {
+      "name": "🐳 Infrastructure",
+      "path": "./infrastructure"
+    },
+    {
+      "name": "📋 Scripts",
+      "path": "./scripts"
+    },
+    {
+      "name": "🛠️ Tools",
+      "path": "./tools"
+    }
+  ],
+  "settings": {
+    "typescript.preferences.root": ".",
+    "typescript.workspaceSymbols.scope": "allOpenProjects",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "typescript.inlayHints.parameterNames.enabled": "literals",
+    "typescript.inlayHints.variableTypes.enabled": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+    
+    "eslint.workingDirectories": [
+      "./apps/api",
+      "./apps/web", 
+      "./apps/mqtt-ingestion",
+      "./libs/database",
+      "./libs/shared"
+    ],
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    
+    "prettier.configPath": "./.prettierrc",
+    "prettier.ignorePath": "./.prettierignore",
+    
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/.turbo": true,
+      "**/coverage": true,
+      "**/.eslintcache": true,
+      "**/*.tsbuildinfo": true
+    },
+    
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/coverage": true,
+      "**/.turbo": true
+    },
+    
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/.next/**": true,
+      "**/coverage/**": true,
+      "**/.turbo/**": true
+    },
+    
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    
+    "emmet.includeLanguages": {
+      "typescript": "typescriptreact",
+      "javascript": "javascriptreact"
+    },
+    
+    "git.ignoreLimitWarning": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    
+    "json.schemas": [
+      {
+        "fileMatch": ["package.json"],
+        "url": "https://json.schemastore.org/package.json"
+      },
+      {
+        "fileMatch": ["turbo.json"],
+        "url": "https://turbo.build/schema.json"
+      },
+      {
+        "fileMatch": ["tsconfig.json", "tsconfig.*.json"],
+        "url": "https://json.schemastore.org/tsconfig.json"
+      }
+    ],
+    
+    "prisma.showPrismaDataPlatformNotification": false,
+    
+    "docker.showStartPage": false,
+    
+    "testing.automaticallyOpenPeekView": "never",
+    "testing.followRunningTest": false
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.vscode-typescript-next",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "prisma.prisma",
+      "ms-vscode.vscode-json",
+      "redhat.vscode-yaml",
+      "ms-azuretools.vscode-docker",
+      "ms-vscode.vscode-jest",
+      "ms-vscode.vscode-node-debug2",
+      "christian-kohler.path-intellisense",
+      "formulahendry.auto-rename-tag",
+      "ms-vscode.vscode-typescript-next",
+      "usernamehw.errorlens",
+      "gruntfuggly.todo-tree",
+      "aaron-bond.better-comments",
+      "streetsidesoftware.code-spell-checker",
+      "ms-vscode.vscode-terminal-suggest",
+      "ms-vscode.remote-containers"
+    ],
+    "unwantedRecommendations": [
+      "ms-vscode.vscode-typescript",
+      "hookyqr.beautify"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🔌 Debug API",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/apps/api/dist/main.js",
+        "cwd": "${workspaceFolder}/apps/api",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "sourceMaps": true,
+        "outFiles": ["${workspaceFolder}/apps/api/dist/**/*.js"],
+        "console": "integratedTerminal",
+        "restart": true,
+        "protocol": "inspector",
+        "preLaunchTask": "build-api"
+      },
+      {
+        "name": "📡 Debug MQTT Service",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/apps/mqtt-ingestion/dist/index.js",
+        "cwd": "${workspaceFolder}/apps/mqtt-ingestion",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "sourceMaps": true,
+        "outFiles": ["${workspaceFolder}/apps/mqtt-ingestion/dist/**/*.js"],
+        "console": "integratedTerminal",
+        "restart": true,
+        "protocol": "inspector",
+        "preLaunchTask": "build-mqtt"
+      },
+      {
+        "name": "🧪 Debug Tests",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["--runInBand", "--detectOpenHandles"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "env": {
+          "NODE_ENV": "test"
+        }
+      },
+      {
+        "name": "📱 Debug Next.js",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/apps/web/node_modules/.bin/next",
+        "args": ["dev", "--port", "3001"],
+        "cwd": "${workspaceFolder}/apps/web",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🚀 Debug Full Stack",
+        "configurations": [
+          "🔌 Debug API",
+          "📡 Debug MQTT Service", 
+          "📱 Debug Next.js"
+        ],
+        "stopAll": true
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🏗️ Build All",
+        "type": "shell",
+        "command": "npm run build",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "problemMatcher": ["$tsc"]
+      },
+      {
+        "label": "build-api",
+        "type": "shell",
+        "command": "npm run build:api",
+        "group": "build",
+        "presentation": {
+          "echo": false,
+          "reveal": "silent",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "build-mqtt",
+        "type": "shell", 
+        "command": "npm run build:mqtt",
+        "group": "build",
+        "presentation": {
+          "echo": false,
+          "reveal": "silent", 
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "🚀 Start Development",
+        "type": "shell",
+        "command": "npm run dev",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "dedicated",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "isBackground": true,
+        "problemMatcher": {
+          "owner": "typescript",
+          "source": "ts",
+          "fileLocation": "relative",
+          "pattern": {
+            "regexp": "\\s*(.*):(\\d+):(\\d+)\\s*-\\s*(error|warning|info)\\s*(TS\\d+)\\s*:\\s*(.*)",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "code": 5,
+            "message": 6
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Starting compilation in watch mode",
+            "endsPattern": "Found \\d+ errors?\\. Watching for file changes\\."
+          }
+        }
+      },
+      {
+        "label": "🧪 Run Tests",
+        "type": "shell",
+        "command": "npm test",
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "dedicated",
+          "showReuseMessage": true,
+          "clear": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🧹 Clean All",
+        "type": "shell",
+        "command": "npm run clean:all",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": true,
+          "clear": false
+        }
+      },
+      {
+        "label": "🗄️ Database Studio",
+        "type": "shell",
+        "command": "npm run db:studio",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "dedicated",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "isBackground": true
+      },
+      {
+        "label": "🐳 Start Services",
+        "type": "shell",
+        "command": "npm run dev:services",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "dedicated",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "isBackground": true
+      },
+      {
+        "label": "✅ Health Check",
+        "type": "shell",
+        "command": "./tools/health-check.sh",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": true,
+          "panel": "dedicated",
+          "showReuseMessage": false,
+          "clear": true
+        }
+      }
+    ]
+  }
+}

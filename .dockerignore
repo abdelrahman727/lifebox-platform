@@ -1,0 +1,71 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Production builds
+.next
+dist
+build
+
+# Development files
+.git
+.github
+README.md
+CLAUDE.md
+
+# Environment and config
+.env*
+!.env.example
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test and coverage
+coverage
+*.tgz
+*.tar.gz
+
+# Documentation (exclude from build context)
+docs/
+.claude/
+
+# Database files
+*.sqlite
+*.db
+
+# Logs
+logs
+*.log
+
+# Uploads and temporary files
+uploads/
+reports/
+tmp/
+temp/
+
+# Docker files (when building from subdirectories)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Cache directories
+.npm
+.turbo
+.tsbuildinfo
+
+# Local development files
+LOCAL-*
+VPS-*
+PRODUCTION-*

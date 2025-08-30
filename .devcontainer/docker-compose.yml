@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  lifebox-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspace:cached
+      - lifebox-node-modules:/workspace/node_modules
+      - lifebox-turbo-cache:/workspace/.turbo
+      - /var/run/docker.sock:/var/run/docker-host.sock
+    command: sleep infinity
+    network_mode: service:postgres
+    depends_on:
+      - postgres
+      - emqx
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://lifebox:lifebox@localhost:5432/lifebox_dev
+      - MQTT_BROKER_HOST=localhost
+      - MQTT_BROKER_PORT=1883
+      - MQTT_USERNAME=lifebox
+      - MQTT_PASSWORD=lifebox
+      - JWT_SECRET=development-secret-key
+      - API_BASE_URL=http://localhost:3000/api/v1
+      - FRONTEND_URL=http://localhost:3001
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=lifebox_dev
+      - POSTGRES_USER=lifebox
+      - POSTGRES_PASSWORD=lifebox
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - lifebox-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifebox -d lifebox_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  emqx:
+    image: emqx/emqx:5.4.1
+    restart: unless-stopped
+    environment:
+      - EMQX_NAME=lifebox-emqx
+      - EMQX_HOST=127.0.0.1
+      - EMQX_NODE__COOKIE=lifebox_secret_cookie
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+      - EMQX_AUTHENTICATION__1__BACKEND=built_in_database
+      - EMQX_AUTHENTICATION__1__MECHANISM=password_based
+      - EMQX_AUTHENTICATION__1__PASSWORD_HASH_ALGORITHM=sha256
+      - EMQX_AUTHENTICATION__1__USER_ID_TYPE=username
+    volumes:
+      - lifebox-emqx-data:/opt/emqx/data
+      - lifebox-emqx-log:/opt/emqx/log
+    ports:
+      - "1883:1883"     # MQTT
+      - "8083:8083"     # WebSocket
+      - "8084:8084"     # WebSocket over SSL
+      - "8883:8883"     # MQTT over SSL
+      - "18083:18083"   # Dashboard
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lifebox-node-modules:
+  lifebox-turbo-cache:
+  lifebox-postgres-data:
+  lifebox-emqx-data:
+  lifebox-emqx-log:
+
+networks:
+  default:
+    name: lifebox-dev-network

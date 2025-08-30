@@ -1,0 +1,297 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [
+    "**/.env.*local",
+    ".eslintrc.js",
+    ".prettierrc",
+    "turbo.json",
+    "tsconfig.json",
+    "package.json"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "JWT_REFRESH_SECRET",
+    "MQTT_BROKER_HOST",
+    "MQTT_BROKER_PORT",
+    "MQTT_USERNAME", 
+    "MQTT_PASSWORD",
+    "API_BASE_URL",
+    "FRONTEND_URL",
+    "SENDGRID_API_KEY",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "FAWRY_BASE_URL",
+    "FAWRY_MERCHANT_CODE"
+  ],
+  "tasks": {
+    "db:generate": {
+      "inputs": [
+        "libs/database/prisma/schema.prisma",
+        "libs/database/package.json"
+      ],
+      "outputs": [
+        "libs/database/node_modules/.prisma/**",
+        "libs/database/index.ts",
+        "libs/database/index.d.ts"
+      ],
+      "cache": true,
+      "env": ["DATABASE_URL"]
+    },
+    "db:migrate": {
+      "dependsOn": ["db:generate"],
+      "inputs": [
+        "libs/database/prisma/schema.prisma",
+        "libs/database/prisma/migrations/**"
+      ],
+      "outputs": [],
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:seed": {
+      "dependsOn": ["db:generate", "db:migrate"],
+      "inputs": [
+        "libs/database/seed.ts",
+        "libs/database/seeds/**"
+      ],
+      "outputs": [],
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "build": {
+      "dependsOn": ["^build", "db:generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.ts",
+        "!**/*.spec.ts",
+        "!**/test/**",
+        "!**/__tests__/**",
+        "!**/coverage/**",
+        "!**/reports/**"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "API_BASE_URL",
+        "FRONTEND_URL"
+      ]
+    },
+    "build:production": {
+      "dependsOn": ["^build:production", "db:generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.ts",
+        "!**/*.spec.ts",
+        "!**/test/**",
+        "!**/__tests__/**",
+        "!**/coverage/**",
+        "!**/reports/**",
+        "!**/.next/cache/**"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "NODE_ENV=production",
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET",
+        "API_BASE_URL",
+        "FRONTEND_URL",
+        "SENDGRID_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "FAWRY_BASE_URL"
+      ]
+    },
+    "build:validate": {
+      "dependsOn": ["build", "lint", "typecheck"],
+      "inputs": [
+        "dist/**",
+        "$TURBO_DEFAULT$"
+      ],
+      "outputs": [
+        "reports/build-validation.json"
+      ],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": ["db:generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "tsconfig.json",
+        "**/tsconfig.json"
+      ],
+      "outputs": [
+        "*.tsbuildinfo",
+        "**/*.tsbuildinfo"
+      ],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build", "typecheck"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/test/**",
+        "jest.config.*",
+        "**/jest.config.*"
+      ],
+      "outputs": [
+        "coverage/**",
+        "reports/**",
+        "test-results/**"
+      ],
+      "cache": true
+    },
+    "test:e2e": {
+      "dependsOn": ["build", "dev:services"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "**/test/**/*.ts",
+        "**/*.e2e-spec.ts"
+      ],
+      "outputs": [
+        "reports/**",
+        "test-results/**",
+        "screenshots/**"
+      ],
+      "cache": false,
+      "env": [
+        "NODE_ENV=test",
+        "DATABASE_URL",
+        "API_BASE_URL",
+        "FRONTEND_URL"
+      ]
+    },
+    "test:ci": {
+      "dependsOn": ["build", "typecheck"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/test/**"
+      ],
+      "outputs": [
+        "coverage/**",
+        "reports/**",
+        "junit.xml"
+      ],
+      "cache": true,
+      "env": ["NODE_ENV=test", "CI=true"]
+    },
+    "lint": {
+      "dependsOn": ["db:generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".eslintrc.js",
+        "eslint.config.*",
+        "**/eslint.config.*",
+        "**/.eslintrc.*"
+      ],
+      "outputs": [
+        ".eslintcache",
+        "**/.eslintcache"
+      ],
+      "cache": true
+    },
+    "lint:fix": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".eslintrc.js"
+      ],
+      "outputs": [],
+      "cache": false
+    },
+    "format": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".prettierrc"
+      ],
+      "outputs": [],
+      "cache": false
+    },
+    "format:check": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".prettierrc"
+      ],
+      "outputs": []
+    },
+    "dev:services": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "infrastructure/docker/**",
+        "docker-compose*.yml"
+      ],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["db:generate", "dev:services"],
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/dist/**",
+        "!**/.next/**"
+      ],
+      "env": [
+        "NODE_ENV=development",
+        "DATABASE_URL", 
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET",
+        "MQTT_BROKER_HOST",
+        "MQTT_BROKER_PORT",
+        "MQTT_USERNAME",
+        "MQTT_PASSWORD",
+        "API_BASE_URL",
+        "FRONTEND_URL"
+      ]
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NODE_ENV=production",
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_REFRESH_SECRET", 
+        "MQTT_BROKER_HOST",
+        "MQTT_BROKER_PORT",
+        "MQTT_USERNAME",
+        "MQTT_PASSWORD",
+        "API_BASE_URL",
+        "FRONTEND_URL",
+        "SENDGRID_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "FAWRY_BASE_URL"
+      ]
+    },
+    "clean": {
+      "cache": false,
+      "inputs": [],
+      "outputs": []
+    },
+    "clean:cache": {
+      "cache": false,
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  "remoteCache": {
+    "enabled": false
+  },
+  "cacheDir": ".turbo"
+}
