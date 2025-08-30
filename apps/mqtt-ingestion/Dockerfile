@@ -4,8 +4,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and root tsconfig
 COPY package*.json ./
+COPY tsconfig.json ./
 COPY apps/mqtt-ingestion/package*.json ./apps/mqtt-ingestion/
 COPY libs/shared/package*.json ./libs/shared/
 
