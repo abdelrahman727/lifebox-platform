@@ -16,8 +16,10 @@ COPY libs/shared/package*.json ./libs/shared/
 # Install all dependencies (including dev dependencies for build)
 RUN npm install --ignore-scripts && npm cache clean --force
 
-# Copy source code
-COPY . .
+# Copy source code with proper structure
+COPY apps/api ./apps/api
+COPY libs ./libs
+COPY tsconfig.json ./
 
 # Create scripts directory if it doesn't exist and add postinstall script
 RUN mkdir -p apps/api/scripts
