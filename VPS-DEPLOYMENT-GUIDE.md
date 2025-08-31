@@ -53,7 +53,6 @@ sudo ./scripts/deploy-production-vps.sh
 
 docker compose -f infrastructure/docker/docker-compose.production.yml up -d --build
 
-
 **The script will automatically:**
 
 - ✅ Install Docker and Docker Compose

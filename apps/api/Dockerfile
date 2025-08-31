@@ -50,8 +50,8 @@ COPY apps/api/package*.json ./apps/api/
 COPY libs/database/package*.json ./libs/database/
 COPY libs/shared/package*.json ./libs/shared/
 
-# Install only production dependencies
-RUN NODE_ENV=production npm install --omit=dev --ignore-scripts && npm cache clean --force
+# Install all dependencies needed for runtime
+RUN npm install --ignore-scripts && npm cache clean --force
 
 # Copy built application
 COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist/* ./
