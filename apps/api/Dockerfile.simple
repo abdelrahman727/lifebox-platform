@@ -22,11 +22,16 @@ COPY turbo.json* ./
 # Install dependencies without running scripts first
 RUN npm install --ignore-scripts
 
-# Install @prisma/client specifically 
+# Install @prisma/client specifically and ensure proper workspace linking
 RUN npm install @prisma/client
+RUN cd libs/database && npm install @prisma/client
 
-# Generate Prisma client
+# Generate Prisma client in the correct location
 RUN cd libs/database && npx prisma generate
+
+# Verify Prisma client was generated correctly
+RUN ls -la libs/database/node_modules/.prisma/client/ || echo "Prisma client not found in expected location"
+RUN ls -la node_modules/.prisma/client/ || echo "Prisma client not found in root node_modules"
 
 # Build the application
 RUN cd apps/api && npm run build
