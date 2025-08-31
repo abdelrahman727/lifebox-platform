@@ -2,6 +2,18 @@
 
 > **The definitive guide for Claude Code when working with the LifeBox Industrial IoT Platform**
 
+## 🚨 **CURRENT DEPLOYMENT STATUS - August 31, 2025**
+
+**ISSUE: VPS Deployment Environment Configuration**
+- ✅ **Docker builds working** - All containers build successfully 
+- ✅ **Reports module fixed** - Added to Git and builds properly
+- ✅ **Repository sync fixed** - Correct GitHub repository now active
+- ❌ **Container startup failures** - PostgreSQL and API containers crashing
+- **ROOT CAUSE**: Docker Compose env_file path issue - fixed env_file paths from `../../.env` to `.env`
+- **NEXT STEP**: Test deployment on VPS after pushing this fix
+
+**What we're doing**: Completing the production deployment to VPS (72.60.34.28) by fixing the final environment configuration issues.
+
 ## 🎯 Quick Navigation
 
 | **Section** | **Description** | **Status** |
