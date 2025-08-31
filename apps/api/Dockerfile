@@ -54,7 +54,7 @@ COPY libs/shared/package*.json ./libs/shared/
 RUN NODE_ENV=production npm install --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy built application
-COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist ./
+COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist/* ./
 COPY --from=builder --chown=lifebox:nodejs /app/apps/api/package*.json ./
 # Copy the entire libs directory to ensure proper module resolution
 COPY --from=builder --chown=lifebox:nodejs /app/libs ./libs
