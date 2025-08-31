@@ -19,8 +19,11 @@ COPY libs/ ./libs/
 COPY tsconfig.json ./
 COPY turbo.json* ./
 
-# Install all dependencies from scratch for Alpine Linux
-RUN npm install
+# Install dependencies without running scripts first
+RUN npm install --ignore-scripts
+
+# Install @prisma/client specifically 
+RUN npm install @prisma/client
 
 # Generate Prisma client
 RUN cd libs/database && npx prisma generate
