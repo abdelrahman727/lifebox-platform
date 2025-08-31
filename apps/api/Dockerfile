@@ -25,10 +25,10 @@ COPY tsconfig.json ./
 RUN mkdir -p apps/api/scripts
 COPY apps/api/scripts/postinstall.js apps/api/scripts/postinstall.js
 
-# Install @prisma/client specifically in libs/database workspace
-RUN cd libs/database && npm install @prisma/client
+# Install @prisma/client at root level for proper monorepo resolution
+RUN npm install @prisma/client
 
-# Generate Prisma client explicitly
+# Generate Prisma client from the database workspace
 RUN cd libs/database && npx prisma generate
 
 # Build the application
