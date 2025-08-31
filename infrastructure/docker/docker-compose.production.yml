@@ -61,9 +61,10 @@ services:
 
       # MQTT Listeners
       EMQX_LISTENERS__TCP__DEFAULT__BIND: '0.0.0.0:1883'
-      EMQX_LISTENERS__SSL__DEFAULT__BIND: '0.0.0.0:8883'
       EMQX_LISTENERS__WS__DEFAULT__BIND: '0.0.0.0:8083'
-      EMQX_LISTENERS__WSS__DEFAULT__BIND: '0.0.0.0:8084'
+      # SSL listeners disabled for basic deployment
+      # EMQX_LISTENERS__SSL__DEFAULT__BIND: '0.0.0.0:8883'
+      # EMQX_LISTENERS__WSS__DEFAULT__BIND: '0.0.0.0:8084'
 
       # Authentication & Authorization
       EMQX_AUTHENTICATION__1__MECHANISM: password_based
@@ -97,11 +98,12 @@ services:
 
     ports:
       - '1883:1883' # MQTT
-      - '8883:8883' # MQTT over SSL/TLS
       - '8083:8083' # MQTT over WebSocket
-      - '8084:8084' # MQTT over Secure WebSocket
       - '18083:18083' # Dashboard HTTP
-      - '18084:18084' # Dashboard HTTPS
+      # SSL ports disabled for basic deployment
+      # - '8883:8883' # MQTT over SSL/TLS
+      # - '8084:8084' # MQTT over Secure WebSocket
+      # - '18084:18084' # Dashboard HTTPS
     volumes:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
