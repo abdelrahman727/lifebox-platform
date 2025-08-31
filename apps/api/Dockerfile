@@ -13,8 +13,8 @@ COPY apps/api/package*.json ./apps/api/
 COPY libs/database/package*.json ./libs/database/
 COPY libs/shared/package*.json ./libs/shared/
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm install --ignore-scripts && npm cache clean --force
+# Install all dependencies including workspace dependencies
+RUN npm install --workspaces --ignore-scripts && npm cache clean --force
 
 # Copy source code with proper structure
 COPY apps/api ./apps/api
@@ -44,28 +44,29 @@ RUN adduser -S lifebox -u 1001
 # Set working directory
 WORKDIR /app
 
-# Copy production dependencies only
-COPY package*.json ./
-COPY apps/api/package*.json ./apps/api/
-COPY libs/database/package*.json ./libs/database/
-COPY libs/shared/package*.json ./libs/shared/
+# Copy workspace package.json and lock file (critical for proper dependency resolution)
+COPY --from=builder --chown=lifebox:nodejs /app/package*.json ./
+COPY --from=builder --chown=lifebox:nodejs /app/apps/api/package*.json ./apps/api/
+COPY --from=builder --chown=lifebox:nodejs /app/libs/database/package*.json ./libs/database/
+COPY --from=builder --chown=lifebox:nodejs /app/libs/shared/package*.json ./libs/shared/
 
-# Install all dependencies needed for runtime
-RUN npm install --ignore-scripts && npm cache clean --force
+# Copy all node_modules (root and workspace specific) from builder
+COPY --from=builder --chown=lifebox:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=lifebox:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 
 # Copy built application
-COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist/* ./
-COPY --from=builder --chown=lifebox:nodejs /app/apps/api/package*.json ./
+COPY --from=builder --chown=lifebox:nodejs /app/apps/api/dist ./dist
 # Copy the entire libs directory to ensure proper module resolution
 COPY --from=builder --chown=lifebox:nodejs /app/libs ./libs
-# Ensure Prisma client is available
-COPY --from=builder --chown=lifebox:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
 # Create uploads directory
 RUN mkdir -p uploads reports && chown -R lifebox:nodejs uploads reports
 
 # Switch to non-root user
 USER lifebox
+
+# Set NODE_PATH to include workspace node_modules
+ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
 
 # Expose port
 EXPOSE 3000
@@ -76,4 +77,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "api/src/main.js"]
+CMD ["node", "dist/apps/api/src/main.js"]

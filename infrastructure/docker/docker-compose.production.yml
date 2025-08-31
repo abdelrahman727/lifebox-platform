@@ -51,7 +51,7 @@ services:
     environment:
       # Core Configuration
       EMQX_NAME: lifebox-emqx
-      EMQX_HOST: ${VPS_PUBLIC_IP}
+      EMQX_HOST: 0.0.0.0
 
       # Dashboard Configuration
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USER}

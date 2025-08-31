@@ -53,6 +53,8 @@ sudo ./scripts/deploy-production-vps.sh
 
 docker compose -f infrastructure/docker/docker-compose.production.yml up -d --build
 
+docker run --rm --network docker_lifebox-network -e DATABASE_URL="postgresql://lifebox_prod:SimplePassword123@postgres:5432/lifebox_production" docker-lifebox-api sh -c "cd /app/libs/database && npx prisma db push --force-reset"
+
 **The script will automatically:**
 
 - ✅ Install Docker and Docker Compose
