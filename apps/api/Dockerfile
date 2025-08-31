@@ -25,6 +25,9 @@ COPY tsconfig.json ./
 RUN mkdir -p apps/api/scripts
 COPY apps/api/scripts/postinstall.js apps/api/scripts/postinstall.js
 
+# Install @prisma/client specifically in libs/database workspace
+RUN cd libs/database && npm install @prisma/client
+
 # Generate Prisma client explicitly
 RUN cd libs/database && npx prisma generate
 
