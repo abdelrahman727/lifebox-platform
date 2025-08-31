@@ -1,8 +1,8 @@
 # Simple production-ready Dockerfile for LifeBox API
 FROM node:20-alpine
 
-# Install system dependencies including build tools for native modules
-RUN apk add --no-cache dumb-init curl python3 make g++
+# Install system dependencies including build tools and OpenSSL compatibility
+RUN apk add --no-cache dumb-init curl python3 make g++ openssl1.1-compat
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs && adduser -S lifebox -u 1001
