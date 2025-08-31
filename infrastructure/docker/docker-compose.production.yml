@@ -57,7 +57,6 @@ services:
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USER}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
       EMQX_DASHBOARD__LISTENERS__HTTP__BIND: '0.0.0.0:18083'
-      EMQX_DASHBOARD__LISTENERS__HTTPS__BIND: '0.0.0.0:18084'
 
       # MQTT Listeners
       EMQX_LISTENERS__TCP__DEFAULT__BIND: '0.0.0.0:1883'
@@ -108,7 +107,6 @@ services:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
       - emqx_etc:/opt/emqx/etc
-      - ./config/emqx:/opt/emqx/etc/certs:ro # SSL certificates
       - /etc/localtime:/etc/localtime:ro
     networks:
       - lifebox-network
