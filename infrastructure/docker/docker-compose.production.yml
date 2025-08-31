@@ -133,7 +133,7 @@ services:
   lifebox-api:
     build:
       context: ../../
-      dockerfile: apps/api/Dockerfile.simple
+      dockerfile: apps/api/Dockerfile
     container_name: lifebox-api
     restart: unless-stopped
     env_file:
