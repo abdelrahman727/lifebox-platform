@@ -39,6 +39,8 @@ cp .env.production .env
 # All integrations are pre-configured and ready
 ```
 
+cp .env infrastructure/docker .env
+
 ### **Step 4: Run Automated Deployment**
 
 ```bash
