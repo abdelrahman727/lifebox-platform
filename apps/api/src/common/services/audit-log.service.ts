@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../modules/database/prisma.service';
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { User } from '@lifebox/database';
 
 export interface AuditLogData {
   userId?: string;
