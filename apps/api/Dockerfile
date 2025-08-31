@@ -31,6 +31,13 @@ RUN npm install @prisma/client
 # Generate Prisma client from the database workspace
 RUN cd libs/database && npx prisma generate
 
+# Debug: Check if Prisma client was generated correctly
+RUN ls -la node_modules/.prisma/client/ || echo "Prisma client not found in root node_modules"
+RUN ls -la libs/database/node_modules/.prisma/client/ || echo "Prisma client not found in libs/database"
+
+# Create symlink to ensure proper module resolution
+RUN mkdir -p apps/api/node_modules && ln -sf ../../node_modules/.prisma apps/api/node_modules/.prisma
+
 # Build the application
 RUN cd apps/api && npm run build
 
