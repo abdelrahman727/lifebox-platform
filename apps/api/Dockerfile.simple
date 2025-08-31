@@ -1,8 +1,8 @@
 # Simple production-ready Dockerfile for LifeBox API
 FROM node:20-alpine
 
-# Install system dependencies
-RUN apk add --no-cache dumb-init curl
+# Install system dependencies including build tools for native modules
+RUN apk add --no-cache dumb-init curl python3 make g++
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs && adduser -S lifebox -u 1001
@@ -10,11 +10,15 @@ RUN addgroup -g 1001 -S nodejs && adduser -S lifebox -u 1001
 # Set working directory
 WORKDIR /app
 
-# Copy entire project (simpler approach)
-COPY . .
+# Copy source code only (no node_modules)
+COPY package*.json ./
+COPY apps/ ./apps/
+COPY libs/ ./libs/
+COPY tsconfig.json ./
+COPY turbo.json* ./
 
-# Install dependencies (skip scripts to avoid husky)
-RUN npm install --ignore-scripts
+# Install all dependencies from scratch for Alpine Linux
+RUN npm install
 
 # Generate Prisma client
 RUN cd libs/database && npx prisma generate
@@ -37,4 +41,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "apps/api/dist/src/main.js"]
+CMD ["node", "apps/api/dist/apps/api/src/main.js"]

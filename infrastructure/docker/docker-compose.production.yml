@@ -15,32 +15,31 @@ services:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_backups:/backups
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "127.0.0.1:5432:5432"  # Bind to localhost only
+      - '127.0.0.1:5432:5432' # Bind to localhost only
     networks:
       - lifebox-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     deploy:
       resources:
         limits:
           memory: 1G
           cpus: '1.0'
-
 
   # EMQX MQTT Broker (Production Configuration)
   emqx:
@@ -53,24 +52,24 @@ services:
       # Core Configuration
       EMQX_NAME: lifebox-emqx
       EMQX_HOST: ${VPS_PUBLIC_IP}
-      
+
       # Dashboard Configuration
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USER}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
-      EMQX_DASHBOARD__LISTENERS__HTTP__BIND: "0.0.0.0:18083"
-      EMQX_DASHBOARD__LISTENERS__HTTPS__BIND: "0.0.0.0:18084"
-      
+      EMQX_DASHBOARD__LISTENERS__HTTP__BIND: '0.0.0.0:18083'
+      EMQX_DASHBOARD__LISTENERS__HTTPS__BIND: '0.0.0.0:18084'
+
       # MQTT Listeners
-      EMQX_LISTENERS__TCP__DEFAULT__BIND: "0.0.0.0:1883"
-      EMQX_LISTENERS__SSL__DEFAULT__BIND: "0.0.0.0:8883"
-      EMQX_LISTENERS__WS__DEFAULT__BIND: "0.0.0.0:8083"
-      EMQX_LISTENERS__WSS__DEFAULT__BIND: "0.0.0.0:8084"
-      
+      EMQX_LISTENERS__TCP__DEFAULT__BIND: '0.0.0.0:1883'
+      EMQX_LISTENERS__SSL__DEFAULT__BIND: '0.0.0.0:8883'
+      EMQX_LISTENERS__WS__DEFAULT__BIND: '0.0.0.0:8083'
+      EMQX_LISTENERS__WSS__DEFAULT__BIND: '0.0.0.0:8084'
+
       # Authentication & Authorization
       EMQX_AUTHENTICATION__1__MECHANISM: password_based
       EMQX_AUTHENTICATION__1__BACKEND: built_in_database
       EMQX_AUTHENTICATION__1__USER_ID_TYPE: username
-      
+
       # Security Settings
       EMQX_MQTT__MAX_PACKET_SIZE: 1MB
       EMQX_MQTT__MAX_CLIENTID_LEN: 65535
@@ -81,49 +80,49 @@ services:
       EMQX_MQTT__WILDCARD_SUBSCRIPTION: true
       EMQX_MQTT__SHARED_SUBSCRIPTION: true
       EMQX_MQTT__IGNORE_LOOP_DELIVER: false
-      
+
       # Rate Limiting
-      EMQX_LIMITER__CONNECTION__RATE: "1000/s"
-      EMQX_LIMITER__PUBLISH__RATE: "1000/s"
-      EMQX_LIMITER__SUBSCRIBE__RATE: "1000/s"
-      
+      EMQX_LIMITER__CONNECTION__RATE: '1000/s'
+      EMQX_LIMITER__PUBLISH__RATE: '1000/s'
+      EMQX_LIMITER__SUBSCRIBE__RATE: '1000/s'
+
       # Session Settings
       EMQX_MQTT__SESSION_EXPIRY_INTERVAL: 7200s
       EMQX_MQTT__MAX_AWAITING_REL: 100
       EMQX_MQTT__MAX_RECEIVE_MAXIMUM: 32
-      
+
       # Zone Settings for IoT Devices
       EMQX_ZONES__DEFAULT__MQTT__IDLE_TIMEOUT: 30s
       EMQX_ZONES__DEFAULT__MQTT__ENABLE_STATS: true
-      
+
     ports:
-      - "1883:1883"     # MQTT
-      - "8883:8883"     # MQTT over SSL/TLS
-      - "8083:8083"     # MQTT over WebSocket
-      - "8084:8084"     # MQTT over Secure WebSocket
-      - "18083:18083"   # Dashboard HTTP
-      - "18084:18084"   # Dashboard HTTPS
+      - '1883:1883' # MQTT
+      - '8883:8883' # MQTT over SSL/TLS
+      - '8083:8083' # MQTT over WebSocket
+      - '8084:8084' # MQTT over Secure WebSocket
+      - '18083:18083' # Dashboard HTTP
+      - '18084:18084' # Dashboard HTTPS
     volumes:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
       - emqx_etc:/opt/emqx/etc
-      - ./config/emqx:/opt/emqx/etc/certs:ro  # SSL certificates
+      - ./config/emqx:/opt/emqx/etc/certs:ro # SSL certificates
       - /etc/localtime:/etc/localtime:ro
     networks:
       - lifebox-network
     depends_on:
       - postgres
     healthcheck:
-      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      test: ['CMD', '/opt/emqx/bin/emqx', 'ctl', 'status']
       interval: 30s
       timeout: 15s
       retries: 3
       start_period: 60s
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "20m"
-        max-file: "5"
+        max-size: '20m'
+        max-file: '5'
     deploy:
       resources:
         limits:
@@ -134,52 +133,51 @@ services:
   lifebox-api:
     build:
       context: ../../
-      dockerfile: apps/api/Dockerfile
+      dockerfile: apps/api/Dockerfile.simple
     container_name: lifebox-api
     restart: unless-stopped
     env_file:
       - .env
     environment:
       # Database Configuration
-      DATABASE_URL: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?schema=public"
+      DATABASE_URL: 'postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?schema=public'
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
-      
+
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
-      
+
       # MQTT Configuration
       MQTT_BROKER_HOST: emqx
       MQTT_BROKER_PORT: 1883
       MQTT_USERNAME: ${MQTT_USERNAME}
       MQTT_PASSWORD: ${MQTT_PASSWORD}
       MQTT_CLIENT_ID: lifebox-api-production
-      
-      
+
       # API Configuration
       NODE_ENV: production
       PORT: 3000
       API_PREFIX: api/v1
-      
+
       # SMS Configuration
       SMS_DEPLOYMENT_REGION: ${SMS_DEPLOYMENT_REGION}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
-      
+
       # Email Configuration
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
-      
+
     ports:
-      - "3000:3000"
+      - '3000:3000'
     networks:
       - lifebox-network
     depends_on:
@@ -190,16 +188,16 @@ services:
       - reports:/app/reports
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/health']
       interval: 60s
       timeout: 30s
       retries: 3
       start_period: 120s
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "50m"
-        max-file: "10"
+        max-size: '50m'
+        max-file: '10'
     deploy:
       resources:
         limits:
@@ -222,15 +220,15 @@ services:
       MQTT_USERNAME: ${MQTT_USERNAME}
       MQTT_PASSWORD: ${MQTT_PASSWORD}
       MQTT_CLIENT_ID: lifebox-mqtt-ingestion-production
-      
+
       # API Configuration
       API_BASE_URL: http://lifebox-api:3000/api/v1
       API_TOKEN: ${MQTT_API_TOKEN}
-      
+
       # Processing Configuration
       NODE_ENV: production
       LOG_LEVEL: info
-      
+
     networks:
       - lifebox-network
     depends_on:
@@ -239,16 +237,16 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('MQTT service running')"]
+      test: ['CMD', 'node', '-e', "console.log('MQTT service running')"]
       interval: 60s
       timeout: 10s
       retries: 3
       start_period: 60s
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "20m"
-        max-file: "5"
+        max-size: '20m'
+        max-file: '5'
     deploy:
       resources:
         limits:
@@ -261,8 +259,8 @@ services:
     container_name: lifebox-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./config/nginx/sites/:/etc/nginx/sites-available/:ro
@@ -273,15 +271,15 @@ services:
     depends_on:
       - lifebox-api
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/health']
       interval: 30s
       timeout: 10s
       retries: 3
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "5"
+        max-size: '10m'
+        max-file: '5'
 
 networks:
   lifebox-network:
